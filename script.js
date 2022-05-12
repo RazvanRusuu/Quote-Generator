@@ -1,23 +1,30 @@
 "use strict";
 import "./src/toggleStorage.js";
-import { getQuotes } from "./src/Storage.js";
-import { setQuote } from "./src/Storage.js";
-import { getJSON } from "./src/Storage.js";
+import { getQuotes, setQuote, getSingleQuote, getJSON } from "./src/Storage.js";
 import { getElement } from "./src/Storage.js";
+import { openStorage, closeStorage } from "./src/toggleStorage.js";
 
 const API_URL = "https://type.fit/api/quotes";
 const storageItemsCount = getElement(".storage-count");
+let quotes = getQuotes("quotes");
 
 const getQuoteData = async function () {
   try {
     quote.renderSpinner();
     const quotes = await getJSON(API_URL);
     const randomQuote = Math.round(Math.random() * quotes.length);
-
     quote.renderQuote(quotes[randomQuote]);
   } catch (err) {
     console.log(err);
   }
+};
+
+const controlDeleteQuote = function (id) {
+  const quoteToDelete = getSingleQuote(id);
+  quotes = quotes.filter((item) => item._id !== quoteToDelete._id);
+  setQuote("quotes", quotes);
+  quote.updateStorageDom(quotes);
+  if (quotes.length < 1) closeStorage();
 };
 
 class newQuote {
@@ -35,7 +42,6 @@ class Quote {
   _quotes = getQuotes("quotes");
 
   renderSpinner() {
-    console.log(this._quotes);
     this._quoteContainer.innerHTML = "";
     const markup = `
     <div class="loader" id="loader"></div>
@@ -78,13 +84,40 @@ class Quote {
   }
 
   _saveToQuotes() {
-    this._quotes = [...this._quotes, new newQuote(this._quote)];
-    setQuote("quotes", this._quotes);
+    const quote = new newQuote(...this._quote);
+    quotes = [...quotes, quote];
+    setQuote("quotes", quotes);
     this.updateStorageDom();
+    this.renderSaveQuotes(quote);
+    openStorage();
   }
 
   updateStorageDom() {
-    storageItemsCount.textContent = this._quotes.length;
+    storageItemsCount.textContent = quotes.length;
+  }
+
+  renderSaveQuotes(...quotes) {
+    const markup = quotes.map(this._generateMarkupStoarageQuote).join("");
+    this._quoteStorageContainer.insertAdjacentHTML("afterbegin", markup);
+  }
+  _generateMarkupStoarageQuote(quote) {
+    const {
+      _id: id,
+      _quote: { text, author },
+    } = quote;
+
+    return `
+    <li data-id="${id}" class="storage-quote">
+    <span class="storage-quote-text">
+      ${text}</span>
+    
+    <span class="storage-quote-author">${author ? author : "Unknown"}</span>
+    <button data-id="${id}" class="remove-quote">
+      <i class="fa-solid fa-delete-left"></i>
+    </button>
+  </li>
+    
+    `;
   }
   addHandlerButtons(handler) {
     this._quoteContainer.addEventListener("click", (e) => {
@@ -102,28 +135,19 @@ class Quote {
       this._saveToQuotes();
     });
   }
-  renderStorageQuotes() {
-    const markup = this._quotes.map(this._generateMarkupStoarageQuote).join("");
-    this._quoteStorageContainer.insertAdjacentHTML("afterbegin", markup);
+
+  handleStorageQuote() {
+    this.renderSaveQuotes(...quotes);
   }
-  _generateMarkupStoarageQuote(quote) {
-    const {
-      _id: id,
-      _quote: [{ text, author }],
-    } = quote;
-    console.log(id, text, author);
-    return `
-    <li data-id="${id}" class="storage-quote">
-    <span class="storage-quote-text">
-      ${text}</span>
-    
-    <span class="storage-quote-author">${author ? author : "Unknown"}</span>
-    <button data-id="${id}" class="remove-quote">
-      <i class="fa-solid fa-delete-left"></i>
-    </button>
-  </li>
-    
-    `;
+  handleDeleteQuote(handler) {
+    this._quoteStorageContainer.addEventListener("click", (e) => {
+      const deleteBtn = e.target.closest(".remove-quote");
+      if (!deleteBtn) return;
+      const parentEl = deleteBtn.closest(".storage-quote");
+      parentEl.remove();
+      const { id } = deleteBtn.dataset;
+      handler(id);
+    });
   }
 }
 
@@ -135,7 +159,8 @@ const init = function () {
   getQuoteData();
   quote.addHandlerButtons(getQuoteData);
   quote.addHandlerSave();
-  quote.renderStorageQuotes();
+  quote.handleStorageQuote();
+  quote.handleDeleteQuote(controlDeleteQuote);
 };
 
 document.addEventListener("DOMContentLoaded", init);

@@ -8,7 +8,9 @@ export const getQuotes = function (key) {
 
 export const getSingleQuote = function (id) {
   const quotes = getQuotes("quotes");
-  // const quote = quotes.filter()
+  const quote = quotes.find((item) => item._id === id);
+
+  return quote;
 };
 
 export const getJSON = async function (url) {
