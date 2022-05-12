@@ -218,3 +218,16 @@ button {
     font-size: 55%;
   }
 }
+@media screen and (max-width: 600px) {
+  .quote-container {
+    margin: auto 2rem;
+  }
+  html {
+    font-size: 55%;
+  }
+
+  .storage-quotes {
+    position: absolute;
+    width: 100%;
+  }
+}
