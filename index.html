@@ -9,31 +9,60 @@
       crossorigin="anonymous"
     ></script>
     <link rel="stylesheet" href="style.css" />
+    <script defer type="module" src="script.js"></script>
+
     <title>Quote Generator</title>
   </head>
   <body>
-    <div class="quote-container" id="quote-container">
-      <div class="quote-text">
-        <i class="fas fa-quote-left"></i>
-        <span class="quote" id="quote">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam vel
-          similique sunt, facere pariatur odio tenetur ipsum voluptatum animi,
-          nulla atque.
-        </span>
-      </div>
-
-      <div class="quote-author">
-        <span class="author">Buddha</span>
-      </div>
-      <div class="btn-container">
-        <button class="twitter-button" id="twitter" title="Tweet this!">
-          <i class="fab fa-twitter"></i>
+    <main>
+      <div class="overlay"></div>
+      <div class="storage-quotes">
+        <button class="btn close-storage">
+          <i class="fa-solid fa-xmark"></i>
         </button>
-        <button id="new-quote">New Quote</button>
+        <h3 class="heading-storage">Your Quotes</h3>
+        <ul class="storage-list">
+          <li data-id="" class="storage-quote">
+            <span class="storage-quote-text"
+              >Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam
+              vel similique sunt, facere pariatur odio tenetur ipsum voluptatum
+              animi, nulla atque.</span
+            >
+            <span class="storage-quote-author">Buddha</span>
+            <button data-id="" class="remove-quote">
+              <i class="fa-solid fa-delete-left"></i>
+            </button>
+          </li>
+        </ul>
       </div>
-    </div>
-    <div class="loader" id="loader"></div>
+      <button class="storage-btn">
+        <i class="fa-solid fa-database"></i>
+        <span class="storage-count">0</span>
+      </button>
+      <div class="quote-container" id="quote-container">
+        <div class="quote-text">
+          <i class="fas fa-quote-left"></i>
+          <span class="quote" id="quote">
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ullam vel
+            similique sunt, facere pariatur odio tenetur ipsum voluptatum animi,
+            nulla atque.
+          </span>
+        </div>
 
-    <script src="script.js"></script>
+        <div class="quote-author">
+          <span class="author">Buddha</span>
+        </div>
+        <div class="btn-container">
+          <button class="btn twitter-button" id="twitter" title="Tweet this!">
+            <i class="fab fa-twitter"></i>
+          </button>
+          <button class="btn save-button" title="save">
+            <i class="fa-solid fa-floppy-disk"></i>
+          </button>
+          <button class="btn" id="new-quote">New Quote</button>
+        </div>
+      </div>
+    </main>
+    <!-- <div class="loader" id="loader"></div> -->
   </body>
 </html>
