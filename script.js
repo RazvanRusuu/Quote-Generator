@@ -5,12 +5,11 @@ import { getElement } from "./src/Storage.js";
 import { openStorage, closeStorage } from "./src/toggleStorage.js";
 
 const API_URL = "https://type.fit/api/quotes";
+
 const storageItemsCount = getElement(".storage-count");
-let quotes = getQuotes("quotes");
 
 const getQuoteData = async function () {
   try {
-    quote.renderSpinner();
     const quotes = await getJSON(API_URL);
     const randomQuote = Math.round(Math.random() * quotes.length);
     quote.renderQuote(quotes[randomQuote]);
@@ -19,29 +18,22 @@ const getQuoteData = async function () {
   }
 };
 
-const controlDeleteQuote = function (id) {
-  const quoteToDelete = getSingleQuote(id);
-  quotes = quotes.filter((item) => item._id !== quoteToDelete._id);
-  setQuote("quotes", quotes);
-  quote.updateStorageDom(quotes);
-  if (quotes.length < 1) closeStorage();
-};
-
-class newQuote {
-  _id = Date.now().toString();
-  _quote;
-  constructor(quote) {
-    this._quote = quote;
-  }
-}
-
 class Quote {
   _quoteStorageContainer = getElement(".storage-list");
   _quoteContainer = getElement("#quote-container");
-  _quote = {};
+  _quote;
   _quotes = getQuotes("quotes");
 
-  renderSpinner() {
+  constructor() {
+    this._renderSpinner();
+    this._handleStorageQuote();
+    this._addHandlers(getQuoteData);
+    this._addSaveHandler();
+    this._handleDeleteQuote();
+    this._updateStorageDom();
+  }
+
+  _renderSpinner() {
     this._quoteContainer.innerHTML = "";
     const markup = `
     <div class="loader" id="loader"></div>
@@ -55,6 +47,7 @@ class Quote {
     const markup = this._quote.map(this._generateMarkup).join("");
     this._quoteContainer.insertAdjacentHTML("afterbegin", markup);
   }
+
   _generateMarkup(quote) {
     return `
      <div class="quote-text">
@@ -84,26 +77,31 @@ class Quote {
   }
 
   _saveToQuotes() {
-    const quote = new newQuote(...this._quote);
-    quotes = [...quotes, quote];
-    setQuote("quotes", quotes);
-    this.updateStorageDom();
-    this.renderSaveQuotes(quote);
+    const quote = {
+      id: Date.now().toString(),
+      quote: this._quote,
+    };
+
+    this._quotes = [...this._quotes, quote];
+    setQuote("quotes", this._quotes);
+    this._updateStorageDom();
+    this._renderSaveQuotes(quote);
     openStorage();
   }
 
-  updateStorageDom() {
-    storageItemsCount.textContent = quotes.length;
+  _updateStorageDom() {
+    storageItemsCount.textContent = this._quotes.length;
   }
 
-  renderSaveQuotes(...quotes) {
+  _renderSaveQuotes(...quotes) {
     const markup = quotes.map(this._generateMarkupStoarageQuote).join("");
     this._quoteStorageContainer.insertAdjacentHTML("afterbegin", markup);
   }
+
   _generateMarkupStoarageQuote(quote) {
     const {
-      _id: id,
-      _quote: { text, author },
+      id,
+      quote: [{ text, author }],
     } = quote;
 
     return `
@@ -119,16 +117,19 @@ class Quote {
     
     `;
   }
-  addHandlerButtons(handler) {
+  _addHandlers(handler) {
     this._quoteContainer.addEventListener("click", (e) => {
       const newQuoteBtn = e.target.closest("#new-quote");
       const tweetBtn = e.target.closest("#twitter");
       if (!newQuoteBtn && !tweetBtn) return;
-      if (newQuoteBtn) handler();
+      if (newQuoteBtn) {
+        this._renderSpinner();
+        handler();
+      }
       if (tweetBtn) this._tweetQuote();
     });
   }
-  addHandlerSave() {
+  _addSaveHandler() {
     this._quoteContainer.addEventListener("click", (e) => {
       const saveBtn = e.target.closest(".save-button");
       if (!saveBtn) return;
@@ -136,31 +137,38 @@ class Quote {
     });
   }
 
-  handleStorageQuote() {
-    this.renderSaveQuotes(...quotes);
+  _handleStorageQuote() {
+    this._renderSaveQuotes(...this._quotes);
   }
-  handleDeleteQuote(handler) {
+
+  _handleDeleteQuote() {
     this._quoteStorageContainer.addEventListener("click", (e) => {
       const deleteBtn = e.target.closest(".remove-quote");
       if (!deleteBtn) return;
       const parentEl = deleteBtn.closest(".storage-quote");
       parentEl.remove();
       const { id } = deleteBtn.dataset;
-      handler(id);
+      this._deleteQuoteHandler(id);
     });
+  }
+
+  _deleteQuoteHandler(id) {
+    const quoteToDelete = getSingleQuote(id);
+
+    this._quotes = this._quotes.filter((item) => {
+      return item.id !== quoteToDelete.id;
+    });
+
+    setQuote("quotes", this._quotes);
+    this._updateStorageDom();
+    if (this._quotes.length < 1) closeStorage();
   }
 }
 
 const quote = new Quote();
 
 const init = function () {
-  quote.renderSpinner();
-  quote.updateStorageDom();
   getQuoteData();
-  quote.addHandlerButtons(getQuoteData);
-  quote.addHandlerSave();
-  quote.handleStorageQuote();
-  quote.handleDeleteQuote(controlDeleteQuote);
 };
 
-document.addEventListener("DOMContentLoaded", init);
+init();

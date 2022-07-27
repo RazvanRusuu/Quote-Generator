@@ -8,8 +8,7 @@ export const getQuotes = function (key) {
 
 export const getSingleQuote = function (id) {
   const quotes = getQuotes("quotes");
-  const quote = quotes.find((item) => item._id === id);
-
+  const quote = quotes.find((item) => item.id === id);
   return quote;
 };
 
